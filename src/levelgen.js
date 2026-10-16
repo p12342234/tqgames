@@ -96,6 +96,12 @@ export function generateLevel(L, ctx) {
   const goals = goalTypes.map(t => ({ type: t, count: per }));
   const par = goals.reduce((s, g) => s + Math.ceil(g.count / 3), 0);
   const moves = Math.max(par + 2, Math.ceil(par * cur.slack));
+  // 時間預算：預期步數（par 乘上「色數/目標種類越多越難連」的係數）× 每步秒數。
+  // 每步秒數從 secStart 緩降到 secEnd；BOSS 略緊、喘息關略鬆；結果取整到 5 秒並限制在 [timeMin, timeMax]。
+  const moveFactor = 1.2 + 0.12 * (k - 4) + 0.1 * (m - 1);
+  const secPerMove = lerp(d.secStart, d.secEnd, cur.t);
+  const pace = cur.boss ? 0.92 : cur.rest ? 1.1 : 1;
+  const time = Math.max(d.timeMin, Math.min(d.timeMax, Math.round((par * moveFactor * secPerMove * pace) / 5) * 5));
 
   const queue = [];
   const need = goals.map(g => Math.ceil(g.count / 3));
@@ -148,7 +154,7 @@ export function generateLevel(L, ctx) {
     }
     if (findMatches(g).size === 0 && placed >= 1) {
       return {
-        level: L, types, goals, moves, par, planted: placed, solution,
+        level: L, types, goals, moves, time, par, planted: placed, solution,
         board: g, boss: cur.boss, rest: cur.rest, attempt,
         stats: { N, k, m, comboCount, goalCombos, comboIdx, goalIdx, slack: cur.slack },
       };

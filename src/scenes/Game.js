@@ -20,7 +20,11 @@ export class GameScene extends Phaser.Scene {
     this.level = this.buildLevel(this.levelNo);
     this.grid = this.level.board.map(r => r.slice());
     this.rng = mulberry32(hash(this.levelNo, 7, this.level.attempt));
-    this.movesLeft = this.level.moves;
+    this.timeLimit = this.level.time;
+    this.timeLeft = this.timeLimit;
+    this.started = false;              // 玩家第一次碰盤面才開始計時
+    this.warned = false;
+    this.moveCount = 0;
     this.score = 0;
     this.collected = {};
     this.level.goals.forEach(g => (this.collected[g.type] = 0));
@@ -38,9 +42,13 @@ export class GameScene extends Phaser.Scene {
       pool: cfg.pool, diff: cfg.difficulty, cols: this.cols, rows: this.rows, salt: cfg.levelSalt,
     });
     const ov = cfg.levelOverrides[L] || {};        // LiveOps 針對單一關卡熱修
-    if (ov.moves) lv.moves = ov.moves;
-    if (ov.movesDelta) lv.moves += ov.movesDelta;
-    lv.moves += cfg.extraMoves;                    // 活動加步數
+    if (ov.time) lv.time = ov.time;
+    if (ov.timeDelta) lv.time += ov.timeDelta;
+    lv.time += cfg.extraSeconds;                   // 活動加秒數
+    // 動態輔助：同一關每連續失敗一次多給一點時間（上限 failAssistMax 次），讓玩家悠閒過關
+    const d = cfg.difficulty, fails = Math.min(this.profile.failCount(L), d.failAssistMax);
+    this.assistPct = fails * d.failAssistPct;
+    if (fails) lv.time = Math.round((lv.time * (1 + this.assistPct)) / 5) * 5;
     return lv;
   }
 
@@ -87,8 +95,8 @@ export class GameScene extends Phaser.Scene {
     const W = this.W, lv = this.level;
     txt(this, W / 2, 56, `第 ${this.levelNo} 關${lv.boss ? '  ★ BOSS ★' : ''}`, 44, lv.boss ? '#ffd166' : '#ffffff', { fontStyle: 'bold' });
     button(this, 70, 56, 100, 60, '☰', () => this.scene.start('Menu'), 0x39425a);
-    this.movesText = txt(this, 170, 135, '', 40, '#ffffff', { fontStyle: 'bold' });
-    this.scoreText = txt(this, W - 200, 135, '', 40, '#ffd166', { fontStyle: 'bold' });
+    this.movesText = txt(this, 170, 135, '', 38, '#ffffff', { fontStyle: 'bold' });
+    this.scoreText = txt(this, W - 200, 135, '', 38, '#ffd166', { fontStyle: 'bold' });
 
     this.goalUI = {};
     const n = lv.goals.length, gap = 190, x0 = W / 2 - ((n - 1) * gap) / 2;
@@ -99,12 +107,46 @@ export class GameScene extends Phaser.Scene {
       this.goalUI[g.type] = txt(this, x + 32, 225, '', 34, '#ffffff', { fontStyle: 'bold' });
     });
     const ev = this.cfg.activeEvents[0];
-    if (ev) txt(this, W / 2, 288, ev.name + ' ×' + this.cfg.scoreMul.toFixed(1), 22, '#ffe9a8');
+    if (ev) txt(this, W / 2, 272, ev.name + ' ×' + this.cfg.scoreMul.toFixed(1), 20, '#ffe9a8');
+
+    // 計時進度條
+    this.barW = W - 200;
+    const by = 306;
+    this.add.rectangle(W / 2, by, this.barW + 8, 26, 0x14181f).setStrokeStyle(2, 0x3a4560);
+    this.barFill = this.add.rectangle(W / 2 - this.barW / 2, by, this.barW, 18, 0x4cd68a).setOrigin(0, 0.5);
+    this.timeText = txt(this, W - 58, by, '', 24, '#ffffff', { fontStyle: 'bold' }).setOrigin(0.5);
+    this.startHint = txt(this, W / 2, by + 30, this.assistPct
+      ? `已提供時間輔助 +${Math.round(this.assistPct * 100)}%・輕觸盤面開始計時`
+      : '輕觸盤面開始計時', 20, '#9fb3d9');
     this.updateHud();
+    this.drawTimer();
+  }
+
+  drawTimer() {
+    const ratio = Math.max(0, this.timeLeft / this.timeLimit);
+    this.barFill.width = Math.max(0.001, this.barW * ratio);
+    this.barFill.setFillStyle(ratio > 0.5 ? 0x4cd68a : ratio > 0.25 ? 0xffd166 : 0xff6b6b);
+    this.timeText.setText(Math.ceil(this.timeLeft) + 's');
+    if (ratio <= 0.2 && !this.warned && this.started && !this.ended) {
+      this.warned = true;
+      this.tweens.add({ targets: this.barFill, alpha: 0.45, yoyo: true, repeat: -1, duration: 350 });
+    }
+  }
+
+  addTime(sec) {
+    this.timeLeft = Math.min(this.timeLimit, this.timeLeft + sec);
+    this.drawTimer();
+  }
+
+  update(_, dt) {
+    if (!this.started || this.busy || this.ended) return;   // 動畫/連鎖結算期間不扣時間
+    this.timeLeft -= dt / 1000;
+    if (this.timeLeft <= 0) { this.timeLeft = 0; this.drawTimer(); this.finish(false); return; }
+    this.drawTimer();
   }
 
   updateHud() {
-    this.movesText.setText(`步數 ${this.movesLeft}`);
+    this.movesText.setText(`步數 ${this.moveCount}`);
     this.scoreText.setText(`分數 ${this.score}`);
     for (const g of this.level.goals) {
       const left = Math.max(0, g.count - this.collected[g.type]);
@@ -124,6 +166,7 @@ export class GameScene extends Phaser.Scene {
       this.armHint();
       const cell = this.toCell(p.x, p.y);
       if (!cell) return;
+      if (!this.started) { this.started = true; this.startHint.setVisible(false); }
       if (this.sel && this.sel.r === cell.r && this.sel.c === cell.c) { this.clearSel(); return; }
       if (this.sel && Math.abs(this.sel.r - cell.r) + Math.abs(this.sel.c - cell.c) === 1) {
         const s = this.sel; this.clearSel(); this.trySwap(s, cell); return;
@@ -193,7 +236,7 @@ export class GameScene extends Phaser.Scene {
       this.busy = false; this.armHint();
       return;
     }
-    this.movesLeft--;
+    this.moveCount++;
     this.updateHud();
     await this.resolve();
     await this.afterMove();
@@ -206,6 +249,7 @@ export class GameScene extends Phaser.Scene {
       const m = findMatches(this.grid);
       if (!m.size) break;
       chain++;
+      if (chain > 1) this.addTime(this.cfg.difficulty.chainBonusSec * Math.min(chain - 1, 3));
       await this.clearCells(m, chain);
       await this.dropAndFill();
     }
@@ -223,7 +267,7 @@ export class GameScene extends Phaser.Scene {
       this.sprites[r][c] = null;
       this.grid[r][c] = null;
     }
-    if (chain > 1) this.toast(`連鎖 ×${chain}`, '#ffd166');
+    if (chain > 1) this.toast(`連鎖 ×${chain}  +${(this.cfg.difficulty.chainBonusSec * Math.min(chain - 1, 3)).toFixed(1)}s`, '#ffd166');
     this.updateHud();
     await Promise.all(dead.map(s => this.tw({ targets: s, scale: 0, alpha: 0, angle: 90, duration: 180 })));
     dead.forEach(s => s.destroy());
@@ -250,7 +294,6 @@ export class GameScene extends Phaser.Scene {
 
   async afterMove() {
     if (this.goalsDone()) return this.finish(true);
-    if (this.movesLeft <= 0) return this.finish(false);
     if (!validSwaps(this.grid).length) {
       this.toast('重新洗牌');
       shuffleGrid(this.grid, this.rng, this.level.types);
@@ -268,33 +311,35 @@ export class GameScene extends Phaser.Scene {
 
   /* ───────── 結算 ───────── */
   finish(win) {
-    this.ended = true; this.clearHint();
+    this.ended = true; this.clearHint(); this.tweens.killTweensOf(this.barFill); this.barFill.setAlpha(1);
     let stars = 0, bonus = 0;
     if (win) {
-      bonus = this.movesLeft * 50;
+      bonus = Math.floor(this.timeLeft) * 20;
       this.score += bonus;
-      const ratio = this.movesLeft / this.level.moves;
-      stars = ratio >= 0.3 ? 3 : ratio >= 0.12 ? 2 : 1;
+      const ratio = this.timeLeft / this.timeLimit;
+      stars = ratio >= 0.4 ? 3 : ratio >= 0.15 ? 2 : 1;
     }
     this.updateHud();
     this.profile.reportResult({
       level: this.levelNo, win, score: this.score, stars,
-      movesUsed: this.level.moves - this.movesLeft, movesLimit: this.level.moves,
+      moves: this.moveCount, timeLimit: this.timeLimit, timeUsed: Math.round(this.timeLimit - this.timeLeft),
       events: this.cfg.activeEvents.map(e => e.id),
     });
     this.time.delayedCall(500, () => this.showResult(win, stars, bonus));
   }
 
+  failNote() { return this.profile.failCount(this.levelNo) < this.cfg.difficulty.failAssistMax; }
+
   showResult(win, stars, bonus) {
     const W = this.W, H = this.cfg.game.height;
     this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.65).setDepth(30).setInteractive();
     this.add.rectangle(W / 2, H / 2, 560, 620, 0x2a3142).setStrokeStyle(4, win ? 0xffd166 : 0x8a4a4a).setDepth(31);
-    txt(this, W / 2, H / 2 - 230, win ? '過關！' : '步數用完了', 64, win ? '#ffd166' : '#ff9a9a', { fontStyle: 'bold' }).setDepth(32);
+    txt(this, W / 2, H / 2 - 230, win ? '過關！' : '時間到了', 64, win ? '#ffd166' : '#ff9a9a', { fontStyle: 'bold' }).setDepth(32);
     if (win) txt(this, W / 2, H / 2 - 130, '★'.repeat(stars) + '☆'.repeat(3 - stars), 80, '#ffd166').setDepth(32);
-    txt(this, W / 2, H / 2 - 30, `分數 ${this.score}` + (bonus ? `（剩餘步數獎勵 +${bonus}）` : ''), 28).setDepth(32);
+    txt(this, W / 2, H / 2 - 30, `分數 ${this.score}` + (bonus ? `（剩餘時間獎勵 +${bonus}）` : ''), 28).setDepth(32);
     const primary = win
       ? button(this, W / 2, H / 2 + 90, 420, 100, '下一關', () => this.scene.start('Game', { level: this.levelNo + 1 }), 0x2fb86f)
-      : button(this, W / 2, H / 2 + 90, 420, 100, '再試一次', () => this.scene.start('Game', { level: this.levelNo }), 0xe0783c);
+      : button(this, W / 2, H / 2 + 90, 420, 100, this.failNote() ? '再試一次（多給時間）' : '再試一次', () => this.scene.start('Game', { level: this.levelNo }), 0xe0783c);
     const menu = button(this, W / 2, H / 2 + 220, 420, 84, '回主選單', () => this.scene.start('Menu'), 0x39425a);
     primary.setDepth(32); menu.setDepth(32);
   }

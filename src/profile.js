@@ -1,5 +1,6 @@
 const LS_KEY = 'm3.profile.v1';
 const LS_OUTBOX = 'm3.outbox.v1';
+const LS_FAILS = 'm3.fails.v1';
 const now = () => Date.now();
 const uuid = () =>
   (globalThis.crypto && crypto.randomUUID)
@@ -26,6 +27,14 @@ export class Profile {
 
   _load(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } }
   _save() { try { localStorage.setItem(LS_KEY, JSON.stringify(this.data)); } catch {} }
+
+  /** 同一關連續失敗次數（僅存本機，用來提供遞增的時間輔助）。 */
+  failCount(level) { return this._load(LS_FAILS, {})[level] || 0; }
+  _setFails(level, win) {
+    const f = this._load(LS_FAILS, {});
+    if (win) delete f[level]; else f[level] = (f[level] || 0) + 1;
+    try { localStorage.setItem(LS_FAILS, JSON.stringify(f)); } catch {}
+  }
 
   get level() { return this.data.level; }
   get name() { return this.data.name; }
@@ -77,8 +86,9 @@ export class Profile {
   }
 
   /** 結算：更新本機 → 放入 outbox → 嘗試上傳（失敗保留待下次）。 */
-  async reportResult({ level, win, score, stars, movesUsed, movesLimit, events }) {
+  async reportResult({ level, win, score, stars, moves, timeLimit, timeUsed, events }) {
     const d = this.data;
+    this._setFails(level, win);
     if (win) {
       const prev = d.best[level] || { score: 0, stars: 0 };
       d.best[level] = { score: Math.max(prev.score, score), stars: Math.max(prev.stars, stars) };
@@ -91,7 +101,7 @@ export class Profile {
     const box = this._load(LS_OUTBOX, []);
     box.push({
       action: 'result', playerId: d.playerId, name: d.name,
-      level, win, score, stars, movesUsed, movesLimit, events, client: 'web-1',
+      level, win, score, stars, moves, timeLimit, timeUsed, events, client: 'web-2',
     });
     try { localStorage.setItem(LS_OUTBOX, JSON.stringify(box.slice(-200))); } catch {}
     try { await this._flush(); this.online = true; } catch { this.online = false; }

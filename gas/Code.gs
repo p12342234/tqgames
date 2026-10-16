@@ -6,7 +6,7 @@
  */
 const SHEET_ID = '';                       // 空字串 = 使用綁定的試算表
 const PROFILE_COLS = ['playerId', 'name', 'level', 'coins', 'totalStars', 'best', 'createdAt', 'updatedAt', 'rev'];
-const RUN_COLS = ['ts', 'playerId', 'name', 'level', 'win', 'score', 'stars', 'movesUsed', 'movesLimit', 'events', 'client', 'flag'];
+const RUN_COLS = ['ts', 'playerId', 'name', 'level', 'win', 'score', 'stars', 'moves', 'timeLimit', 'timeUsed', 'events', 'client', 'flag'];
 const MAX_SCORE_PER_LEVEL = 300000;
 
 function ss_() { return SHEET_ID ? SpreadsheetApp.openById(SHEET_ID) : SpreadsheetApp.getActiveSpreadsheet(); }
@@ -149,7 +149,7 @@ function result_(req) {
   }
   runSh.appendRow([
     new Date(), req.playerId, cleanName_(req.name), lv, !!req.win, Number(req.score) || 0, Number(req.stars) || 0,
-    Number(req.movesUsed) || 0, Number(req.movesLimit) || 0, (req.events || []).join(','), String(req.client || ''), flag,
+    Number(req.moves) || 0, Number(req.timeLimit) || 0, Number(req.timeUsed) || 0, (req.events || []).join(','), String(req.client || ''), flag,
   ]);
   return { ok: true, flag: flag };
 }
@@ -160,15 +160,15 @@ function rebuildLevelStats() {
   if (n < 2) return;
   const rows = runs.getRange(2, 1, n - 1, RUN_COLS.length).getValues(), agg = {};
   rows.forEach(function (r) {
-    if (r[11]) return;                                   // 略過被標記的資料
-    const lv = r[3], a = agg[lv] || (agg[lv] = { plays: 0, wins: 0, movesLeftSum: 0, players: {} });
+    if (r[12]) return;                                   // 略過被標記的資料
+    const lv = r[3], a = agg[lv] || (agg[lv] = { plays: 0, wins: 0, timeLeftSum: 0, players: {} });
     a.plays++; a.players[r[1]] = 1;
-    if (r[4] === true || r[4] === 'TRUE') { a.wins++; a.movesLeftSum += (r[8] - r[7]); }
+    if (r[4] === true || r[4] === 'TRUE') { a.wins++; a.timeLeftSum += (r[8] - r[9]); }
   });
-  const out = [['level', 'plays', 'players', 'winRate', 'avgMovesLeftOnWin']];
+  const out = [['level', 'plays', 'players', 'winRate', 'avgTimeLeftOnWin']];
   Object.keys(agg).map(Number).sort(function (a, b) { return a - b; }).forEach(function (lv) {
     const a = agg[lv];
-    out.push([lv, a.plays, Object.keys(a.players).length, a.wins / a.plays, a.wins ? a.movesLeftSum / a.wins : 0]);
+    out.push([lv, a.plays, Object.keys(a.players).length, a.wins / a.plays, a.wins ? a.timeLeftSum / a.wins : 0]);
   });
   const sh = sheet_('LevelStats', out[0]);
   sh.clear();

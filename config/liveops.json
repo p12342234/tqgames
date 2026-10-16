@@ -1,6 +1,9 @@
 {
-  "version": "2026.10.16-1",
-  "maintenance": { "enabled": false, "message": "系統維護中，請稍後再試" },
+  "version": "2026.10.16-2",
+  "maintenance": {
+    "enabled": false,
+    "message": "系統維護中，請稍後再試"
+  },
   "events": [
     {
       "id": "halloween-2026",
@@ -8,9 +11,8 @@
       "enabled": true,
       "start": "2026-10-15T00:00:00+08:00",
       "end": "2026-11-02T00:00:00+08:00",
-      "banner": "萬聖節活動：新增南瓜與幽靈商品・分數 x1.5・每關 +2 步",
+      "banner": "萬聖節活動：新增南瓜與幽靈商品・分數 x1.5・每關 +15 秒",
       "scoreMultiplier": 1.5,
-      "extraMoves": 2,
       "packs": [
         {
           "key": "tiles-halloween",
@@ -20,14 +22,27 @@
         }
       ],
       "tiles": [
-        { "id": "pumpkin", "name": "南瓜", "pack": "tiles-halloween", "frame": "tile_pumpkin.png" },
-        { "id": "ghost",   "name": "幽靈", "pack": "tiles-halloween", "frame": "tile_ghost.png" }
-      ]
+        {
+          "id": "pumpkin",
+          "name": "南瓜",
+          "pack": "tiles-halloween",
+          "frame": "tile_pumpkin.png"
+        },
+        {
+          "id": "ghost",
+          "name": "幽靈",
+          "pack": "tiles-halloween",
+          "frame": "tile_ghost.png"
+        }
+      ],
+      "extraSeconds": 15
     }
   ],
   "disabledTiles": [],
   "difficultyPatch": {},
   "levelOverrides": {
-    "10": { "movesDelta": 2 }
+    "10": {
+      "timeDelta": 15
+    }
   }
 }

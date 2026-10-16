@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "levelSalt": 20261016,
   "game": {
     "title": "商品消除",
@@ -10,7 +10,7 @@
     "cols": 8,
     "rows": 8,
     "tileSize": 80,
-    "offsetY": 330,
+    "offsetY": 356,
     "hintDelayMs": 6000
   },
   "gas": {
@@ -73,7 +73,7 @@
     "maxColors": 7,
     "goalTypeEvery": 15,
     "maxGoalTypes": 3,
-    "goalBase": 9,
+    "goalBase": 14,
     "goalGrowth": 2.0,
     "goalPower": 0.6,
     "slackStart": 2.0,
@@ -84,6 +84,13 @@
     "bossGoalMul": 1.2,
     "restSlackBonus": 0.1,
     "maxPlanted": 6,
-    "goalMax": 54
+    "goalMax": 54,
+    "secStart": 6.5,
+    "secEnd": 5.5,
+    "timeMin": 45,
+    "timeMax": 240,
+    "failAssistPct": 0.15,
+    "failAssistMax": 4,
+    "chainBonusSec": 1.5
   }
 }

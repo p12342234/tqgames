@@ -42,7 +42,7 @@ export function buildConfig(base, live = {}, now = new Date()) {
     pool: tiles.filter(t => !disabled.has(t.id)).map(t => t.id),
     activeEvents: events,
     scoreMul: events.reduce((m, e) => m * (e.scoreMultiplier || 1), 1),
-    extraMoves: events.reduce((s, e) => s + (e.extraMoves || 0), 0),
+    extraSeconds: events.reduce((s, e) => s + (e.extraSeconds || 0), 0),
     difficulty: { ...base.difficulty, ...(live.difficultyPatch || {}) },
     levelOverrides: live.levelOverrides || {},
     maintenance: live.maintenance || { enabled: false },
