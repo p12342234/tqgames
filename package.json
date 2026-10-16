@@ -1,0 +1,11 @@
+{
+  "name": "match3-liveops",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "serve": "python3 -m http.server 8080",
+    "simulate": "node tools/simulate.mjs",
+    "art": "python3 tools/make_placeholder_art.py"
+  }
+}

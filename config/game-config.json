@@ -1,0 +1,89 @@
+{
+  "version": "1.0.0",
+  "levelSalt": 20261016,
+  "game": {
+    "title": "商品消除",
+    "width": 720,
+    "height": 1280
+  },
+  "board": {
+    "cols": 8,
+    "rows": 8,
+    "tileSize": 80,
+    "offsetY": 330,
+    "hintDelayMs": 6000
+  },
+  "gas": {
+    "url": "",
+    "timeoutMs": 8000
+  },
+  "liveops": {
+    "url": "config/liveops.json",
+    "cacheMinutes": 5
+  },
+  "packs": [
+    {
+      "key": "tiles-core",
+      "png": "assets/atlas/tiles-core.png",
+      "json": "assets/atlas/tiles-core.json",
+      "version": 1
+    }
+  ],
+  "tiles": [
+    {
+      "id": "apple",
+      "name": "蘋果",
+      "pack": "tiles-core",
+      "frame": "tile_apple.png"
+    },
+    {
+      "id": "milk",
+      "name": "牛奶",
+      "pack": "tiles-core",
+      "frame": "tile_milk.png"
+    },
+    {
+      "id": "bread",
+      "name": "麵包",
+      "pack": "tiles-core",
+      "frame": "tile_bread.png"
+    },
+    {
+      "id": "soda",
+      "name": "汽水",
+      "pack": "tiles-core",
+      "frame": "tile_soda.png"
+    },
+    {
+      "id": "candy",
+      "name": "糖果",
+      "pack": "tiles-core",
+      "frame": "tile_candy.png"
+    },
+    {
+      "id": "cheese",
+      "name": "起司",
+      "pack": "tiles-core",
+      "frame": "tile_cheese.png"
+    }
+  ],
+  "difficulty": {
+    "baseColors": 4,
+    "colorEvery": 15,
+    "maxColors": 7,
+    "goalTypeEvery": 15,
+    "maxGoalTypes": 3,
+    "goalBase": 9,
+    "goalGrowth": 2.0,
+    "goalPower": 0.6,
+    "slackStart": 2.0,
+    "slackEnd": 1.45,
+    "halfLife": 50,
+    "bossEvery": 10,
+    "bossSlackCut": 0.1,
+    "bossGoalMul": 1.2,
+    "restSlackBonus": 0.1,
+    "maxPlanted": 6,
+    "goalMax": 54
+  }
+}

@@ -1,0 +1,55 @@
+{
+ "frames": {
+  "tile_pumpkin.png": {
+   "frame": {
+    "x": 2,
+    "y": 2,
+    "w": 128,
+    "h": 128
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 128,
+    "h": 128
+   },
+   "sourceSize": {
+    "w": 128,
+    "h": 128
+   }
+  },
+  "tile_ghost.png": {
+   "frame": {
+    "x": 132,
+    "y": 2,
+    "w": 128,
+    "h": 128
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 128,
+    "h": 128
+   },
+   "sourceSize": {
+    "w": 128,
+    "h": 128
+   }
+  }
+ },
+ "meta": {
+  "app": "make_placeholder_art.py (TexturePacker JSON Hash compatible)",
+  "version": "1.0",
+  "image": "tiles-halloween.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 262,
+   "h": 132
+  },
+  "scale": "1"
+ }
+}

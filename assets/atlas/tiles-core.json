@@ -1,0 +1,135 @@
+{
+ "frames": {
+  "tile_apple.png": {
+   "frame": {
+    "x": 2,
+    "y": 2,
+    "w": 128,
+    "h": 128
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 128,
+    "h": 128
+   },
+   "sourceSize": {
+    "w": 128,
+    "h": 128
+   }
+  },
+  "tile_milk.png": {
+   "frame": {
+    "x": 132,
+    "y": 2,
+    "w": 128,
+    "h": 128
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 128,
+    "h": 128
+   },
+   "sourceSize": {
+    "w": 128,
+    "h": 128
+   }
+  },
+  "tile_bread.png": {
+   "frame": {
+    "x": 262,
+    "y": 2,
+    "w": 128,
+    "h": 128
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 128,
+    "h": 128
+   },
+   "sourceSize": {
+    "w": 128,
+    "h": 128
+   }
+  },
+  "tile_soda.png": {
+   "frame": {
+    "x": 2,
+    "y": 132,
+    "w": 128,
+    "h": 128
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 128,
+    "h": 128
+   },
+   "sourceSize": {
+    "w": 128,
+    "h": 128
+   }
+  },
+  "tile_candy.png": {
+   "frame": {
+    "x": 132,
+    "y": 132,
+    "w": 128,
+    "h": 128
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 128,
+    "h": 128
+   },
+   "sourceSize": {
+    "w": 128,
+    "h": 128
+   }
+  },
+  "tile_cheese.png": {
+   "frame": {
+    "x": 262,
+    "y": 132,
+    "w": 128,
+    "h": 128
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 128,
+    "h": 128
+   },
+   "sourceSize": {
+    "w": 128,
+    "h": 128
+   }
+  }
+ },
+ "meta": {
+  "app": "make_placeholder_art.py (TexturePacker JSON Hash compatible)",
+  "version": "1.0",
+  "image": "tiles-core.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 392,
+   "h": 262
+  },
+  "scale": "1"
+ }
+}
